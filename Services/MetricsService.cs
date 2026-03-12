@@ -40,7 +40,7 @@ public class MetricsService
     private class RequestTracker : IDisposable
     {
         private readonly Gauge _activeRequests;
-        private readonly Histogram.Timer _timer;
+        private readonly IDisposable  _timer;
 
         public RequestTracker(Gauge activeRequests, Histogram histogram)
         {
