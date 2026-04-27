@@ -1,0 +1,81 @@
+using Microsoft.AspNetCore.Mvc;
+
+namespace HelloCSharp.Controllers;
+
+[ApiController]
+[Route("[controller]")]
+public class AggregateController : ControllerBase
+{
+    private readonly DownstreamServicesClient _downstream;
+
+    public AggregateController(DownstreamServicesClient downstream)
+    {
+        _downstream = downstream;
+    }
+
+    /// <summary>
+    /// hello-nodejs və hello-python servislərinə müraciət edib cavabları birləşdirir.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> Get([FromQuery] string name = "World")
+    {
+        var (nodejsHello, pythonRoot) = await (
+            _downstream.GetNodejsHelloAsync(name),
+            _downstream.GetPythonRootAsync()
+        );
+
+        return Ok(new
+        {
+            source = "hello-csharp",
+            @namespace = "hello-csharp",
+            calledServices = new[]
+            {
+                new
+                {
+                    service = "hello-nodejs",
+                    @namespace = "hello-nodejs",
+                    response = (object?)nodejsHello ?? "unreachable"
+                },
+                new
+                {
+                    service = "hello-python",
+                    @namespace = "hello-python",
+                    response = (object?)pythonRoot ?? "unreachable"
+                }
+            }
+        });
+    }
+
+    /// <summary>
+    /// Bütün servislərin health statusunu yoxlayır.
+    /// </summary>
+    [HttpGet("health")]
+    public async Task<IActionResult> Health()
+    {
+        var (nodejsHealth, pythonHealth) = await (
+            _downstream.GetNodejsHealthAsync(),
+            _downstream.GetPythonHealthAsync()
+        );
+
+        return Ok(new
+        {
+            source = "hello-csharp",
+            status = "healthy",
+            downstreamHealth = new[]
+            {
+                new
+                {
+                    service = "hello-nodejs",
+                    status = nodejsHealth.HasValue ? "reachable" : "unreachable",
+                    response = (object?)nodejsHealth ?? "unreachable"
+                },
+                new
+                {
+                    service = "hello-python",
+                    status = pythonHealth.HasValue ? "reachable" : "unreachable",
+                    response = (object?)pythonHealth ?? "unreachable"
+                }
+            }
+        });
+    }
+}

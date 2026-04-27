@@ -10,10 +10,26 @@ builder.Services.AddSwaggerGen();
 
 // Register custom metrics service
 builder.Services.AddSingleton<MetricsService>();
+builder.Services.AddSingleton<WebSocketRegistry>();
+
+// Downstream servisləri üçün named HttpClient-lər
+var downstreamSection = builder.Configuration.GetSection("DownstreamServices");
+builder.Services.AddHttpClient("HelloNodejs", client =>
+{
+    client.BaseAddress = new Uri(downstreamSection["HelloNodejs"]!);
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
+builder.Services.AddHttpClient("HelloPython", client =>
+{
+    client.BaseAddress = new Uri(downstreamSection["HelloPython"]!);
+    client.Timeout = TimeSpan.FromSeconds(5);
+});
+builder.Services.AddScoped<DownstreamServicesClient>();
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
+app.UseWebSockets();
 app.UseSwagger();
 app.UseSwaggerUI();
 
