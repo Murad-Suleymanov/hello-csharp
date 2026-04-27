@@ -19,10 +19,11 @@ public class AggregateController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] string name = "World")
     {
-        var (nodejsHello, pythonRoot) = await (
-            _downstream.GetNodejsHelloAsync(name),
-            _downstream.GetPythonRootAsync()
-        );
+        var nodejsTask = _downstream.GetNodejsHelloAsync(name);
+        var pythonTask = _downstream.GetPythonRootAsync();
+        await Task.WhenAll(nodejsTask, pythonTask);
+        var nodejsHello = nodejsTask.Result;
+        var pythonRoot = pythonTask.Result;
 
         return Ok(new
         {
@@ -52,10 +53,11 @@ public class AggregateController : ControllerBase
     [HttpGet("health")]
     public async Task<IActionResult> Health()
     {
-        var (nodejsHealth, pythonHealth) = await (
-            _downstream.GetNodejsHealthAsync(),
-            _downstream.GetPythonHealthAsync()
-        );
+        var nodejsTask = _downstream.GetNodejsHealthAsync();
+        var pythonTask = _downstream.GetPythonHealthAsync();
+        await Task.WhenAll(nodejsTask, pythonTask);
+        var nodejsHealth = nodejsTask.Result;
+        var pythonHealth = pythonTask.Result;
 
         return Ok(new
         {
