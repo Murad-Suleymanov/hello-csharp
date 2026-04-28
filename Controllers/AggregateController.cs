@@ -48,6 +48,25 @@ public class AggregateController : ControllerBase
     }
 
     /// <summary>
+    /// hello-csharp → hello-nodejs → hello-python ardıcıl zənciri.
+    /// Istio ambient mode-da üç node arasında iki ayrı edge göstərir.
+    /// </summary>
+    [HttpGet("chain")]
+    public async Task<IActionResult> Chain()
+    {
+        var chain = await _downstream.GetNodejsChainAsync();
+        return Ok(new
+        {
+            source = "hello-csharp",
+            calledService = new
+            {
+                service = "hello-nodejs",
+                response = (object?)chain ?? "unreachable"
+            }
+        });
+    }
+
+    /// <summary>
     /// Bütün servislərin health statusunu yoxlayır.
     /// </summary>
     [HttpGet("health")]

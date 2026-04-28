@@ -51,6 +51,22 @@ public class DownstreamServicesClient
         }
     }
 
+    public async Task<JsonElement?> GetNodejsChainAsync()
+    {
+        try
+        {
+            var response = await _nodejsClient.GetAsync("/api/chain");
+            response.EnsureSuccessStatusCode();
+            var json = await response.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<JsonElement>(json, JsonOptions);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "hello-nodejs chain endpoint-ə müraciət uğursuz oldu");
+            return null;
+        }
+    }
+
     public async Task<JsonElement?> GetNodejsHealthAsync()
     {
         try
