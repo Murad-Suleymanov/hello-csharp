@@ -12,6 +12,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<MetricsService>();
 builder.Services.AddSingleton<WebSocketRegistry>();
 
+// hello-websocket client
+builder.Services.AddSingleton<HelloWebSocketLatest>();
+builder.Services.AddHostedService<HelloWebSocketClient>();
+
 // Downstream servisləri üçün named HttpClient-lər
 var downstreamSection = builder.Configuration.GetSection("DownstreamServices");
 builder.Services.AddHttpClient("HelloNodejs", client =>
