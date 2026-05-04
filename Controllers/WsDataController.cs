@@ -21,17 +21,37 @@ public class WsDataController : ControllerBase
     public IActionResult Latest()
     {
         var raw = _store.Raw;
+        var sessionId = _store.SessionId;
+
         if (raw is null)
-            return Ok(new { source = "hello-csharp", upstream = "hello-websocket", data = (object?)"no data yet" });
+            return Ok(new
+            {
+                source = "hello-csharp",
+                upstream = "hello-websocket",
+                sessionId,
+                data = (object?)"no data yet"
+            });
 
         try
         {
             var parsed = JsonSerializer.Deserialize<JsonElement>(raw);
-            return Ok(new { source = "hello-csharp", upstream = "hello-websocket", data = parsed });
+            return Ok(new
+            {
+                source = "hello-csharp",
+                upstream = "hello-websocket",
+                sessionId,
+                data = parsed
+            });
         }
         catch
         {
-            return Ok(new { source = "hello-csharp", upstream = "hello-websocket", data = (object?)raw });
+            return Ok(new
+            {
+                source = "hello-csharp",
+                upstream = "hello-websocket",
+                sessionId,
+                data = (object?)raw
+            });
         }
     }
 }
