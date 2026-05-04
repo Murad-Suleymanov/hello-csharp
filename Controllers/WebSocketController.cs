@@ -9,10 +9,41 @@ namespace HelloCSharp.Controllers;
 public class WebSocketController : ControllerBase
 {
     private readonly WebSocketRegistry _registry;
+    private readonly HelloWebSocketLatest _store;
 
-    public WebSocketController(WebSocketRegistry registry)
+    public WebSocketController(WebSocketRegistry registry, HelloWebSocketLatest store)
     {
         _registry = registry;
+        _store = store;
+    }
+
+    [HttpGet("stream")]
+    public async Task Stream([FromQuery] int interval = 1000)
+    {
+        if (!HttpContext.WebSockets.IsWebSocketRequest)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
+            await HttpContext.Response.WriteAsync("WebSocket request gözlənilir.");
+            return;
+        }
+
+        using var ws = await HttpContext.WebSockets.AcceptWebSocketAsync();
+        var ct = HttpContext.RequestAborted;
+
+        try
+        {
+            using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(interval));
+            while (await timer.WaitForNextTickAsync(ct) && ws.State == WebSocketState.Open)
+            {
+                var payload = _store.Raw ?? "{\"data\":\"no data yet\"}";
+                var bytes = Encoding.UTF8.GetBytes(payload);
+                await ws.SendAsync(bytes, WebSocketMessageType.Text, endOfMessage: true, ct);
+            }
+        }
+        catch (OperationCanceledException) { }
+
+        if (ws.State == WebSocketState.Open)
+            await ws.CloseAsync(WebSocketCloseStatus.NormalClosure, null, CancellationToken.None);
     }
 
     [HttpGet]
