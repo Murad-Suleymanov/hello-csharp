@@ -76,13 +76,31 @@ public class WebSocketController : ControllerBase
             }
         }, ct);
 
-        // send loop — hər `interval` ms-də bir özü mesaj göndərir
+        // send loop — Outbox (POST /WebSocket/{id}/send) + timestamp timer
         var sendTask = Task.Run(async () =>
         {
             using var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(interval));
-            while (await timer.WaitForNextTickAsync(ct) && ws.State == WebSocketState.Open)
+            var outboxRead = session.Outbox.Reader.ReadAsync(ct).AsTask();
+            var timerTick = timer.WaitForNextTickAsync(ct).AsTask();
+
+            while (ws.State == WebSocketState.Open && !ct.IsCancellationRequested)
             {
-                var bytes = Encoding.UTF8.GetBytes(DateTimeOffset.UtcNow.ToString("O"));
+                var done = await Task.WhenAny(outboxRead, timerTick);
+                string text;
+
+                if (done == outboxRead)
+                {
+                    text = await outboxRead;
+                    outboxRead = session.Outbox.Reader.ReadAsync(ct).AsTask();
+                }
+                else
+                {
+                    if (!await timerTick) break;
+                    text = DateTimeOffset.UtcNow.ToString("O");
+                    timerTick = timer.WaitForNextTickAsync(ct).AsTask();
+                }
+
+                var bytes = Encoding.UTF8.GetBytes(text);
                 await ws.SendAsync(bytes, WebSocketMessageType.Text, endOfMessage: true, ct);
             }
         }, ct);
