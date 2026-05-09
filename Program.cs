@@ -1,7 +1,17 @@
 using HelloCSharp;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(r => r.AddService(Telemetry.ServiceName))
+    .WithTracing(tracing => tracing
+        .AddSource(Telemetry.ActivitySource.Name)
+        .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter());
 
 // Add services to the container
 builder.Services.AddControllers();

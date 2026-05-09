@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HelloCSharp.Controllers;
@@ -19,11 +20,20 @@ public class AggregateController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] string name = "World")
     {
+        using var activity = Telemetry.ActivitySource.StartActivity(
+            "aggregate.fanout",
+            ActivityKind.Internal);
+        activity?.SetTag("aggregate.name", name);
+        activity?.SetTag("aggregate.downstream.count", 2);
+
         var nodejsTask = _downstream.GetNodejsHelloAsync(name);
         var pythonTask = _downstream.GetPythonRootAsync();
         await Task.WhenAll(nodejsTask, pythonTask);
         var nodejsHello = nodejsTask.Result;
         var pythonRoot = pythonTask.Result;
+
+        activity?.SetTag("aggregate.nodejs.reachable", nodejsHello is not null);
+        activity?.SetTag("aggregate.python.reachable", pythonRoot is not null);
 
         return Ok(new
         {
