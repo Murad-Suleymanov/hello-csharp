@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: registry.easysolution.work
-  IMAGE_NAME: "hello-csharp-testing"
+  IMAGE_NAME: "hello-csharp"
 
 jobs:
   build-and-push:
@@ -48,5 +48,5 @@ jobs:
         run: |
           curl -sf -X POST https://webhook.easysolution.work/webhook/build-complete \
             -H "Content-Type: application/json" \
-            -d '{"service":"hello-csharp-testing","namespace":"hello-csharp","tag":"${{ steps.vars.outputs.short_sha }}"}'
+            -d '{"service":"hello-csharp","namespace":"hello-csharp","tag":"${{ steps.vars.outputs.short_sha }}"}'
 
