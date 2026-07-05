@@ -1,7 +1,6 @@
 using HelloCSharp;
 using Prometheus;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
