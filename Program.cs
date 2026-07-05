@@ -1,6 +1,11 @@
 using HelloCSharp;
 using Prometheus;
 
+// TEMP: operator CrashLoopBackOff testi üçün qəsdən startup crash.
+// Test bitəndən sonra bu bloku silin.
+Console.Error.WriteLine("[CRASH-TEST] Qəsdən startup xətası - operator testi ucun.");
+Environment.Exit(1);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
