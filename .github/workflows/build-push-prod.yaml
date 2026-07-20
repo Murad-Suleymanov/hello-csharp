@@ -4,7 +4,6 @@ name: Build & Push to Easy Deploy Registry (prod)
 on:
   push:
     branches: [main, master]
-    
 
 env:
   REGISTRY: registry.easysolution.work
